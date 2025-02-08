@@ -9,15 +9,13 @@
 
 	class mainModel {
 
-		private $server = DB_SERVER;
-		private $db = DB_NAME;
-		private $user = DB_USER;
-		private $pass = DB_PASS;
-
-
-		/*----------  Funcion conectar a BD  ----------*/
+		// Definir la URL de conexión de Railway (especificada en tu dashboard de Railway)
+		private $dbUrl = "postgres://username:password@hostname:port/database_name";  // Aquí debes usar tu URL de Railway
+	
+		/*----------  Función conectar a BD  ----------*/
 		protected function conectar() {
-			$conexion = new PDO("pgsql:host=".$this->server.";dbname=".$this->db, $this->user, $this->pass);
+			// Usamos la URL de Railway para establecer la conexión
+			$conexion = new PDO($this->dbUrl);
 			return $conexion;
 		}
 
