@@ -2,6 +2,7 @@
 	
 	namespace app\models;
 	use \PDO;
+	use \PDOException;
 
 	if(file_exists(__DIR__."/../../config/server.php")){
 		require_once __DIR__."/../../config/server.php";
@@ -9,31 +10,35 @@
 
 	class mainModel {
 
-		// Definir la URL de conexión de Railway (especificada en tu dashboard de Railway)
-		private $dbUrl = "postgres://username:password@hostname:port/database_name";  // Aquí debes usar tu URL de Railway
-	
-		/*----------  Función conectar a BD  ----------*/
-		protected function conectar() {
-			// Usamos la URL de Railway para establecer la conexión
-			$conexion = new PDO($this->dbUrl);
-			return $conexion;
-		}
-
+    // Definir la URL de conexión de Railway (especificada en tu dashboard de Railway)
+    private $dbUrl = "postgres://username:password@hostname:port/database_name?sslmode=require";  // Asegúrate de usar la URL correcta de Railway
+    
+    /*----------  Función conectar a BD  ----------*/
+    protected function conectar() {
+        try {
+            // Usamos la URL de Railway para establecer la conexión
+            $conexion = new PDO($this->dbUrl);
+            $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);  // Establecer el modo de error para depuración
+            return $conexion;
+        } catch (PDOException $e) {
+            echo "Error de conexión: " . $e->getMessage();  // Mostrar el error en caso de fallo de la conexión
+            exit();
+        }
+    }
 
 		/*----------  Funcion ejecutar consultas  ----------*/
-		protected function ejecutarConsulta($consulta, $params = []) {
-			$sql = $this->conectar()->prepare($consulta);
-			
-			// Vinculamos los parámetros si se proporcionan
-			foreach ($params as $key => $value) {
-				$sql->bindParam($key, $value);
-			}
-			
-			// Ejecutamos la consulta
-			$sql->execute();
-			return $sql;
-		}
-		
+    protected function ejecutarConsulta($consulta, $params = []) {
+        $sql = $this->conectar()->prepare($consulta);
+
+        // Vinculamos los parámetros si se proporcionan
+        foreach ($params as $key => $value) {
+            $sql->bindParam($key, $value);
+        }
+
+        // Ejecutamos la consulta
+        $sql->execute();
+        return $sql;
+    }
 
 		/*----------  Funcion limpiar cadenas  ----------*/
 		public function limpiarCadena($cadena) {
