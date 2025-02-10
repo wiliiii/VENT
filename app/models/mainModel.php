@@ -9,16 +9,14 @@
 	}
 
 	class mainModel {
-
-    // Definir la URL de conexión de Railway (especificada en tu dashboard de Railway)
-    private $dbUrl = "postgres://username:password@hostname:port/database_name?sslmode=require";  // Asegúrate de usar la URL correcta de Railway
-    
-    /*----------  Función conectar a BD  ----------*/
     protected function conectar() {
         try {
             // Usamos la URL de Railway para establecer la conexión
-            $conexion = new PDO($this->dbUrl);
-            $conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);  // Establecer el modo de error para depuración
+            $dsn = "pgsql:host=" . DB_SERVER . ";port=5432;dbname=" . DB_NAME;
+            $conexion = new PDO($dsn, DB_USER, DB_PASS, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            ]);
+
             return $conexion;
         } catch (PDOException $e) {
             echo "Error de conexión: " . $e->getMessage();  // Mostrar el error en caso de fallo de la conexión

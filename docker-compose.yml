@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  vent:
+    container_name: php_app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:80"  # Accederemos en http://localhost:8080
+    volumes:
+      - .:/var/www/html  # Sincroniza cambios en tiempo real
+    networks:
+      - app_network
+
+networks:
+  app_network:
