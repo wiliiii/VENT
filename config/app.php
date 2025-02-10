@@ -1,6 +1,6 @@
 <?php
 
-	const APP_URL="http://localhost/VENT/";
+	const APP_URL="https://vent-php-app.onrender.com";
 	const APP_NAME="VENTAS";
 	const APP_SESSION_NAME="POS";
 
