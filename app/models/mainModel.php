@@ -12,10 +12,10 @@
     protected function conectar() {
         try {
             // Usamos la URL de Railway para establecer la conexión
-            $dsn = "pgsql:host=" . DB_SERVER . ";port=5432;dbname=" . DB_NAME;
-            $conexion = new PDO($dsn, DB_USER, DB_PASS, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-            ]);
+			$dsn = "pgsql:host=" . DB_SERVER . ";port=" . DB_PORT . ";dbname=" . DB_NAME;
+			$conexion = new PDO($dsn, DB_USER, DB_PASS, [
+				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+			]);
 
             return $conexion;
         } catch (PDOException $e) {
