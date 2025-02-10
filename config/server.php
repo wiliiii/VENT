@@ -6,3 +6,11 @@ const DB_NAME = "ventas_f40s";       // Nombre de la base de datos
 const DB_USER = "rootname";     // Usuario para la conexión
 const DB_PASS = "QKYgyva5mMLhXnubtgbIQd9X8GlHBvj2";         // Contraseña del usuario
 const DB_PORT = 5432;           // Puerto (el predeterminado para PostgreSQL es 5432)
+
+
+//credenciales para local
+//const DB_SERVER = "localhost";   // Dirección del servidor (para bases de datos locales suele ser localhost)
+//const DB_NAME = "ventas";       // Nombre de la base de datos
+//const DB_USER = "postgres";     // Usuario para la conexión
+//const DB_PASS = "root";         // Contraseña del usuario
+//const DB_PORT = 5432;           // Puerto (el predeterminado para PostgreSQL es 5432)

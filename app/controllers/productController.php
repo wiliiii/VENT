@@ -7,127 +7,114 @@
 	class productController extends mainModel{
 
 		/*----------  Controlador registrar producto  ----------*/
-		public function registrarProductoControlador(){
 
-			# Almacenando datos#
-			$codigo = $this->limpiarCadena($_POST['producto_codigo']);
-			$nombre = $this->limpiarCadena($_POST['producto_nombre']);
-			$precio_compra = $this->limpiarCadena($_POST['producto_precio_compra']);
-			$precio_venta = $this->limpiarCadena($_POST['producto_precio_venta']);
-			$stock = $this->limpiarCadena($_POST['producto_stock']);
-			$marca = $this->limpiarCadena($_POST['producto_marca']);
-			$modelo = $this->limpiarCadena($_POST['producto_modelo']);
-			$unidad = $this->limpiarCadena($_POST['producto_unidad']);
-			$categoria = $this->limpiarCadena($_POST['producto_categoria']);
+			// Método para registrar producto
+			public function registrarProductoControlador() {
+				// Almacenando datos
+				$codigo = $this->limpiarCadena($_POST['producto_codigo']);
+				$nombre = $this->limpiarCadena($_POST['producto_nombre']);
+				$precio_compra = $this->limpiarCadena($_POST['producto_precio_compra']);
+				$precio_venta = $this->limpiarCadena($_POST['producto_precio_venta']);
+				$stock = $this->limpiarCadena($_POST['producto_stock']);
+				$marca = $this->limpiarCadena($_POST['producto_marca']);
+				$modelo = $this->limpiarCadena($_POST['producto_modelo']);
+				$unidad = $this->limpiarCadena($_POST['producto_tipo_unidad']);
+				$categoria = (int) $this->limpiarCadena($_POST['producto_categoria']);
+				$producto_foto = $_FILES['producto_foto']['name'];
 		
-			# Verificando campos obligatorios #
-			if($codigo=="" || $nombre=="" || $precio_compra=="" || $precio_venta=="" || $stock==""){
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "No has llenado todos los campos que son obligatorios",
-					"icono" => "error"
+				// Verificando campos obligatorios
+				if($codigo == "" || $nombre == "" || $precio_compra == "" || $precio_venta == "" || $stock == ""){
+					return json_encode([
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "No has llenado todos los campos que son obligatorios",
+						"icono" => "error"
+					]);
+				}
+		
+				// Verificación de la categoría
+				$sql = "SELECT categoria_id FROM categoria WHERE categoria_id = :categoria";
+				$params = [":categoria" => $categoria];
+				$check_categoria = $this->ejecutarConsultaGenerica($sql, $params, true);
+		
+				if (empty($check_categoria)) {
+					return json_encode([
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "La categoría seleccionada no existe en el sistema",
+						"icono" => "error"
+					]);
+				}
+		
+				// Verificación de precio y stock
+				$precio_compra = number_format($precio_compra, MONEDA_DECIMALES, '.', '');
+				if ($precio_compra <= 0) {
+					return json_encode([
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "El PRECIO DE COMPRA no puede ser menor o igual a 0",
+						"icono" => "error"
+					]);
+				}
+		
+				$precio_venta = number_format($precio_venta, MONEDA_DECIMALES, '.', '');
+				if ($precio_venta <= 0) {
+					return json_encode([
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "El PRECIO DE VENTA no puede ser menor o igual a 0",
+						"icono" => "error"
+					]);
+				}
+		
+				// Verificación del código de producto
+				$sql = "SELECT producto_codigo FROM producto WHERE producto_codigo = :codigo";
+				$params = [":codigo" => $codigo];
+				$check_codigo = $this->ejecutarConsultaGenerica($sql, $params, true);
+		
+				if (!empty($check_codigo)) {
+					return json_encode([
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "El código de producto que ha ingresado ya se encuentra registrado en el sistema",
+						"icono" => "error"
+					]);
+				}
+		
+				// Crear datos para insertar
+				$producto_datos_reg = [
+					["campo_nombre" => "producto_codigo", "campo_marcador" => ":Codigo", "campo_valor" => $codigo],
+					["campo_nombre" => "producto_nombre", "campo_marcador" => ":Nombre", "campo_valor" => $nombre],
+					["campo_nombre" => "producto_precio_compra", "campo_marcador" => ":PrecioCompra", "campo_valor" => $precio_compra],
+					["campo_nombre" => "producto_precio_venta", "campo_marcador" => ":PrecioVenta", "campo_valor" => $precio_venta],
+					["campo_nombre" => "producto_stock_total", "campo_marcador" => ":Stock", "campo_valor" => $stock],
+					["campo_nombre" => "producto_marca", "campo_marcador" => ":Marca", "campo_valor" => $marca],
+					["campo_nombre" => "producto_modelo", "campo_marcador" => ":Modelo", "campo_valor" => $modelo],
+					["campo_nombre" => "producto_tipo_unidad", "campo_marcador" => ":Unidad", "campo_valor" => $unidad],
+					["campo_nombre" => "producto_estado", "campo_marcador" => ":Estado", "campo_valor" => 'activo'],  // Valor por defecto
+					["campo_nombre" => "categoria_id", "campo_marcador" => ":Categoria", "campo_valor" => $categoria],
+					["campo_nombre" => "producto_foto", "campo_marcador" => ":Foto", "campo_valor" => $producto_foto]
 				];
-				return json_encode($alerta);
-				exit();
-			}
 		
-			# Verificación de datos con expresiones regulares
-			// Validación de otros campos con expresiones regulares ...
+				// Insertar producto y verificar el valor retornado
+				$registrar_producto = $this->guardarDatos("producto", $producto_datos_reg);
 		
-			# Verificando la categoría #
-			$check_categoria = $this->ejecutarConsulta("SELECT categoria_id FROM categoria WHERE categoria_id = :categoria");
-			$check_categoria->bindParam(":categoria", $categoria, PDO::PARAM_INT);
-			$check_categoria->execute();
-		
-			if ($check_categoria->rowCount() <= 0) {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "La categoría seleccionada no existe en el sistema",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-				exit();
-			}
-		
-			# Verificación de precio y stock #
-			$precio_compra = number_format($precio_compra, MONEDA_DECIMALES, '.', '');
-			if ($precio_compra <= 0) {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "El PRECIO DE COMPRA no puede ser menor o igual a 0",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-				exit();
-			}
-		
-			$precio_venta = number_format($precio_venta, MONEDA_DECIMALES, '.', '');
-			if ($precio_venta <= 0) {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "El PRECIO DE VENTA no puede ser menor o igual a 0",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-				exit();
-			}
-		
-			# Verificación del código de producto #
-			$check_codigo = $this->ejecutarConsulta("SELECT producto_codigo FROM producto WHERE producto_codigo = :codigo");
-			$check_codigo->bindParam(":codigo", $codigo, PDO::PARAM_STR);
-			$check_codigo->execute();
-		
-			if ($check_codigo->rowCount() >= 1) {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "El código de producto que ha ingresado ya se encuentra registrado en el sistema",
-					"icono" => "error"
-				];
-				return json_encode($alerta);
-				exit();
-			}
-		
-			// Lógica para manejar la carga de imágenes y otros detalles...
-		
-			$producto_datos_reg = [
-				[
-					"campo_nombre" => "producto_codigo",
-					"campo_marcador" => ":Codigo",
-					"campo_valor" => $codigo
-				],
-				[
-					"campo_nombre" => "producto_nombre",
-					"campo_marcador" => ":Nombre",
-					"campo_valor" => $nombre
-				],
-				// Otros campos...
-			];
-		
-			$registrar_producto = $this->guardarDatos("producto", $producto_datos_reg);
-		
-			if ($registrar_producto->rowCount() == 1) {
-				$alerta = [
-					"tipo" => "limpiar",
-					"titulo" => "Producto registrado",
-					"texto" => "El producto " . $nombre . " se registró con éxito",
-					"icono" => "success"
-				];
-			} else {
-				$alerta = [
-					"tipo" => "simple",
-					"titulo" => "Ocurrió un error inesperado",
-					"texto" => "No se pudo registrar el producto, por favor intente nuevamente",
-					"icono" => "error"
-				];
-			}
-		
-			return json_encode($alerta);
-		}
+				if ($registrar_producto && is_numeric($registrar_producto)) {
+					return json_encode([
+						"tipo" => "limpiar",
+						"titulo" => "Producto registrado",
+						"texto" => "El producto " . $nombre . " se registró con éxito. ID del producto: " . $registrar_producto,
+						"icono" => "success"
+					]);
+				} else {
+					return json_encode([
+						"tipo" => "simple",
+						"titulo" => "Ocurrió un error inesperado",
+						"texto" => "No se pudo registrar el producto, por favor intente nuevamente",
+						"icono" => "error"
+					]);
+				}
+			}		
 		
 
 

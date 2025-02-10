@@ -1,6 +1,8 @@
 <?php
-
+	//para produccion
 	const APP_URL="https://vent-php-app.onrender.com/";
+	//para entorno local
+	//const APP_URL="http://localhost/VENT_local/";
 	const APP_NAME="VENTAS";
 	const APP_SESSION_NAME="POS";
 
@@ -12,8 +14,8 @@
 	const PRODUCTO_UNIDAD=["Unidad","Libra","Kilogramo","Caja","Paquete","Lata","Galon","Botella","Tira","Sobre","Bolsa","Saco","Tarjeta","Otro"];
 
 	/*----------  Configuración de moneda  ----------*/
-	const MONEDA_SIMBOLO="$";
-	const MONEDA_NOMBRE="USD";
+	const MONEDA_SIMBOLO="Bs.";
+	const MONEDA_NOMBRE="Bolivianos";
 	const MONEDA_DECIMALES="2";
 	const MONEDA_SEPARADOR_MILLAR=",";
 	const MONEDA_SEPARADOR_DECIMAL=".";

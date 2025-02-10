@@ -3,7 +3,7 @@
 	namespace app\models;
 	use \PDO;
 	use \PDOException;
-
+	use \Exception;
 	if(file_exists(__DIR__."/../../config/server.php")){
 		require_once __DIR__."/../../config/server.php";
 	}
@@ -24,20 +24,49 @@
         }
     }
 
+		/*----------  Funcion ejecutar consultas (solo para añadir producto)  ----------*/
+		protected function ejecutarConsultaGenerica($sql, $params = [], $fetch = false) {
+			try {
+				$pdo = $this->conectar(); // Conectar a la base de datos
+				$stmt = $pdo->prepare($sql); // Prepara la consulta
+		
+				// Verifica si los parámetros están vacíos
+				if (empty($params)) {
+					error_log("Advertencia: No se pasaron parámetros a la consulta.");
+				}
+		
+				// Depurar la consulta y los parámetros
+				error_log("Consulta SQL: " . $sql);
+				error_log("Parámetros: " . json_encode($params));
+		
+				// Ejecuta la consulta con los parámetros
+				$stmt->execute($params);
+		
+				// Si se requiere obtener resultados, devuelve los resultados
+				if ($fetch) {
+					return $stmt->fetchAll(PDO::FETCH_ASSOC);  // Devuelve los resultados como array asociativo
+				}
+		
+				return $stmt;  // Si no se requiere obtener resultados, devuelve el objeto PDOStatement
+			} catch (PDOException $e) {
+				throw new Exception("Error en la consulta SQL: " . $e->getMessage());
+			}
+		}
+		
+
 		/*----------  Funcion ejecutar consultas  ----------*/
-    protected function ejecutarConsulta($consulta, $params = []) {
-        $sql = $this->conectar()->prepare($consulta);
-
-        // Vinculamos los parámetros si se proporcionan
-        foreach ($params as $key => $value) {
-            $sql->bindParam($key, $value);
-        }
-
-        // Ejecutamos la consulta
-        $sql->execute();
-        return $sql;
-    }
-
+		protected function ejecutarConsulta($consulta, $params = []) {
+			$sql = $this->conectar()->prepare($consulta);
+	
+			// Vinculamos los parámetros si se proporcionan
+			foreach ($params as $key => $value) {
+				$sql->bindParam($key, $value);
+			}
+	
+			// Ejecutamos la consulta
+			$sql->execute();
+			return $sql;
+		}
 		/*----------  Funcion limpiar cadenas  ----------*/
 		public function limpiarCadena($cadena) {
 
@@ -69,36 +98,51 @@
 
 		/*----------  Funcion para ejecutar una consulta INSERT preparada  ----------*/
 		protected function guardarDatos($tabla, $datos) {
-
-			$query = "INSERT INTO $tabla (";
-
-			$C = 0;
-			foreach ($datos as $clave) {
-				if($C >= 1) { $query .= ","; }
-				$query .= $clave["campo_nombre"];
-				$C++;
+			// Validación básica del nombre de la tabla
+			if (!preg_match("/^[a-zA-Z0-9_]+$/", $tabla)) {
+				throw new Exception("Nombre de tabla inválido.");
 			}
-			
-			$query .= ") VALUES(";
-
-			$C = 0;
+		
+			// Construcción de la consulta SQL
+			$columnas = [];
+			$valores = [];
 			foreach ($datos as $clave) {
-				if($C >= 1) { $query .= ","; }
-				$query .= $clave["campo_marcador"];
-				$C++;
+				$columnas[] = $clave["campo_nombre"];
+				$valores[] = $clave["campo_marcador"];
 			}
-
-			$query .= ")";
-			$sql = $this->conectar()->prepare($query);
-
-			foreach ($datos as $clave) {
-				$sql->bindParam($clave["campo_marcador"], $clave["campo_valor"]);
+		
+			$query = "INSERT INTO $tabla (" . implode(",", $columnas) . ") VALUES (" . implode(",", $valores) . ")";
+		
+			try {
+				// Obtener la conexión y preparar la consulta
+				$pdo = $this->conectar();
+				$sql = $pdo->prepare($query);
+		
+				// Depurar la consulta antes de ejecutarla
+				// Esto imprimirá la consulta y parámetros en el log para verificar si hay errores
+				error_log("SQL Query: " . $query);
+				error_log("Params: " . json_encode($datos));
+		
+				// Vincular parámetros usando bindValue()
+				foreach ($datos as $clave) {
+					$sql->bindValue($clave["campo_marcador"], $clave["campo_valor"]);
+				}
+		
+				// Ejecutar la consulta
+				$sql->execute();
+		
+				// Verificar si se insertó alguna fila
+				if ($sql->rowCount() > 0) {
+					return $pdo->lastInsertId(); // Retornar el ID del último registro insertado
+				}
+		
+				return false; // Retorna false si no se insertaron registros
+		
+			} catch (PDOException $e) {
+				throw new Exception("Error al insertar los datos: " . $e->getMessage());
 			}
-
-			$sql->execute();
-
-			return $sql;
 		}
+		
 
 
 		/*---------- Funcion seleccionar datos ----------*/

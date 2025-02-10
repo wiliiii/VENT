@@ -60,7 +60,7 @@
 		    	<div class="control">
 					<label>Presentación del producto <?php echo CAMPO_OBLIGATORIO; ?></label><br>
 				  	<div class="select">
-					  	<select name="producto_unidad">
+					  	<select name="producto_tipo_unidad">
 					    	<option value="" selected="" >Seleccione una opción</option>
 	                        <?php
 	                        	echo $insLogin->generarSelect(PRODUCTO_UNIDAD,"VACIO");
